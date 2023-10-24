@@ -1,5 +1,6 @@
 package lk.ijse.identityserver.repository;
 
+import lk.ijse.identityserver.entity.Role;
 import lk.ijse.identityserver.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +28,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     void deleteByNic(String nic);
 
-    @Query(value = "from User u")
-    List<User> getUserHQLWithPageable(Pageable pageable);
+    @Query(value = "from User u where u.role = ?1")
+    List<User> getUserHQLWithPageable(Role role, Pageable pageable);
+
+    @Query(value = "from User u where u.role = ?1")
+    List<User> findAll(Role role);
 }

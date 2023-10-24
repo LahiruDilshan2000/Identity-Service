@@ -18,7 +18,7 @@ import java.io.IOException;
  * @project nexttravel
  **/
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/auth/user")
 @CrossOrigin
 @RequiredArgsConstructor
 public class UserController {

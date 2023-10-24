@@ -79,19 +79,25 @@ public class UserServiceImpl implements UserService {
         if (!userRepository.existsById(userDTO.getUserId()))
             throw new NotFoundException(userDTO.getUserId() + " User doesn't exist !");
 
-        if (userRepository.existsByEmail(userDTO.getEmail()))
-            throw new DuplicateException(userDTO.getEmail() + " user email already exist !");
+        User existUser = userRepository.findById(userDTO.getUserId()).get();
 
-        if (userRepository.existsByNic(userDTO.getNic()))
-            throw new DuplicateException(userDTO.getNic() + " User nic already exist !");
+        if (!existUser.getEmail().equalsIgnoreCase(userDTO.getEmail())){
+            if (userRepository.existsByEmail(userDTO.getEmail()))
+                throw new DuplicateException(userDTO.getEmail() + " user email already exist !");
+        }
 
-        User exitUser = userRepository.findById(userDTO.getUserId()).get();
-        deleteExistingImg(exitUser.getUserImage());
+        if (!existUser.getNic().equalsIgnoreCase(userDTO.getNic())){
+            if (userRepository.existsByNic(userDTO.getNic()))
+                throw new DuplicateException(userDTO.getNic() + " User nic already exist !");
+        }
+
+        deleteExistingImg(existUser.getUserImage());
 
         User user = modelMapper.map(userDTO, User.class);
-        user.setFolderPath(exitUser.getFolderPath());
-        user.setUserImage(saveAndGetPath(exitUser.getFolderPath(), file));
+        user.setFolderPath(existUser.getFolderPath());
+        user.setUserImage(saveAndGetPath(existUser.getFolderPath(), file));
         user.setRole(Role.USER);
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         return modelMapper.map(userRepository.save(user), UserDTO.class);
     }
@@ -116,7 +122,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO updateUserMailAndPassword(UserDTO userDTO) {
+    public UserDTO updateUserUserNameAndPassword(UserDTO userDTO) {
 
         Optional<User> user = userRepository.findByNic(userDTO.getNic());
 
@@ -128,7 +134,7 @@ public class UserServiceImpl implements UserService {
 
         User prsentUser = user.get();
         prsentUser.setEmail(userDTO.getEmail());
-        prsentUser.setPassword(userDTO.getPassword());
+        prsentUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         return modelMapper.map(userRepository.save(prsentUser), UserDTO.class);
     }
@@ -156,7 +162,7 @@ public class UserServiceImpl implements UserService {
         PageRequest pageRequest = PageRequest.of(page, count);
 
         return userRepository
-                .getUserHQLWithPageable(pageRequest)
+                .getUserHQLWithPageable(Role.USER, pageRequest)
                 .stream()
                 .map(this::getDTO)
                 .toList();
@@ -166,7 +172,7 @@ public class UserServiceImpl implements UserService {
     public List<UserDTO> getAll() {
 
         return userRepository
-                .findAll()
+                .findAll(Role.USER)
                 .stream()
                 .map(this::getDTO)
                 .toList();
@@ -186,6 +192,7 @@ public class UserServiceImpl implements UserService {
     private UserDTO getDTO(User user) {
 
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+        System.out.println(user.getRole());
 
         try {
 

@@ -20,7 +20,7 @@ public interface UserService {
 
     UserDTO updateUser(UserDTO userDTO, MultipartFile file) throws IOException;
 
-    UserDTO updateUserMailAndPassword(UserDTO userDTO);
+    UserDTO updateUserUserNameAndPassword(UserDTO userDTO);
 
     void deleteUser(Integer userId);
 
