@@ -18,9 +18,14 @@ import lombok.NoArgsConstructor;
 public class AuthorizedRespondsDTO {
 
     private String token;
+
     private Role role;
+
     private String username;
+
     private String nic;
+
     private String email;
+
     private byte[] imgArray;
 }

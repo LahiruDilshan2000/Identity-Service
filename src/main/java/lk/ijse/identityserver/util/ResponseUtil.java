@@ -15,7 +15,10 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class ResponseUtil {
+
     private int code;
+
     private String message;
+
     private Object data;
 }

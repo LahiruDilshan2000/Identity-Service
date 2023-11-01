@@ -33,4 +33,10 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query(value = "from User u where u.role = ?1")
     List<User> findAll(Role role);
+
+    @Query(value = "select u from User u where u.userName like ?1 " +
+            "or u.nic like ?2 " +
+            "or u.address like ?3 " +
+            "or u.email like ?4 ")
+    List<User> searchByText(String t1, String t2, String t3, String t4);
 }

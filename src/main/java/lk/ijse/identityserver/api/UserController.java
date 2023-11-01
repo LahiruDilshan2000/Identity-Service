@@ -1,7 +1,10 @@
 package lk.ijse.identityserver.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import lk.ijse.identityserver.dto.UserDTO;
+import lk.ijse.identityserver.dto.UserUpdateDTO;
+import lk.ijse.identityserver.entity.Role;
+import lk.ijse.identityserver.exception.UnauthorizedException;
 import lk.ijse.identityserver.service.UserService;
 import lk.ijse.identityserver.util.ResponseUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +30,13 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseUtil updateUser(@RequestParam("file") MultipartFile file, @RequestParam String user) throws IOException {
+    public ResponseUtil updateUser(@RequestPart("file") MultipartFile file,
+                                   @Valid @RequestPart("user") UserDTO userDTO,
+                                   @RequestHeader("X-ROLE") Role role) throws IOException {
 
-        UserDTO userDTO = new ObjectMapper().readValue(user, UserDTO.class);
+        if (!role.equals(Role.ADMIN_USER))
+            throw new UnauthorizedException("Un authorized access to application");
+
         return ResponseUtil
                 .builder()
                 .code(200)
@@ -38,8 +45,28 @@ public class UserController {
                 .build();
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseUtil UpdateUsernameAndPassword(@Valid @RequestBody UserUpdateDTO userUpdateDTO,
+                                                  @RequestHeader("X-ROLE") Role role){
+
+        if (!role.equals(Role.USER))
+            throw new UnauthorizedException("Un authorized access to application");
+
+        System.out.println(userUpdateDTO.toString());
+        return ResponseUtil
+                .builder()
+                .code(200)
+                .message("User update successfully !")
+                .data(userService.updateUserUserNameAndPassword(userUpdateDTO))
+                .build();
+    }
+
     @DeleteMapping(params = {"userId"}, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseUtil deleteUser(@RequestParam Integer userId){
+    public ResponseUtil deleteUser(@RequestParam Integer userId, @RequestHeader("X-ROLE") Role role) {
+
+        if (!role.equals(Role.ADMIN_USER))
+            throw new UnauthorizedException("Un authorized access to application");
 
         userService.deleteUser(userId);
         return ResponseUtil
@@ -50,7 +77,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/get", params = {"nic"}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseUtil findByNic(@RequestParam("nic") String nic){
+    public ResponseUtil findByNic(@RequestParam("nic") String nic) {
 
         return ResponseUtil
                 .builder()
@@ -59,8 +86,14 @@ public class UserController {
                 .data(userService.findByNic(nic))
                 .build();
     }
+
     @GetMapping(value = "/getAll", params = {"page", "count"}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseUtil getUserPageable(@RequestParam Integer page,@RequestParam Integer count){
+    public ResponseUtil getUserPageable(@RequestParam Integer page,
+                                        @RequestParam Integer count,
+                                        @RequestHeader("X-ROLE") Role role) {
+
+        if (!role.equals(Role.ADMIN_USER))
+            throw new UnauthorizedException("Un authorized access to application");
 
         return ResponseUtil
                 .builder()
@@ -71,13 +104,27 @@ public class UserController {
     }
 
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseUtil getAll(){
+    public ResponseUtil getAll() {
 
         return ResponseUtil
                 .builder()
                 .code(200)
                 .message("Getting all user successfully !")
                 .data(userService.getAll())
+                .build();
+    }
+
+    @GetMapping(value = "/search", params = {"text"}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseUtil searchByText(@RequestParam String text, @RequestHeader("X-ROLE") Role role) {
+
+        if(!role.equals(Role.ADMIN_USER))
+            throw new UnauthorizedException("Un authorized access to application");
+
+        return ResponseUtil
+                .builder()
+                .code(200)
+                .message("Search guide by text successfully !")
+                .data(userService.searchByText(text))
                 .build();
     }
 }

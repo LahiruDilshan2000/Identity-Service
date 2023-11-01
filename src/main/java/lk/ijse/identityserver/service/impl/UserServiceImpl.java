@@ -3,6 +3,7 @@ package lk.ijse.identityserver.service.impl;
 import lk.ijse.identityserver.dto.AuthRequestDTO;
 import lk.ijse.identityserver.dto.AuthorizedRespondsDTO;
 import lk.ijse.identityserver.dto.UserDTO;
+import lk.ijse.identityserver.dto.UserUpdateDTO;
 import lk.ijse.identityserver.entity.Role;
 import lk.ijse.identityserver.entity.User;
 import lk.ijse.identityserver.exception.DuplicateException;
@@ -122,19 +123,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO updateUserUserNameAndPassword(UserDTO userDTO) {
+    public UserDTO updateUserUserNameAndPassword(UserUpdateDTO userUpdateDTO) {
 
-        Optional<User> user = userRepository.findByNic(userDTO.getNic());
+        Optional<User> user = userRepository.findByEmail(userUpdateDTO.getEmail());
 
         if (user.isEmpty())
-            throw new NotFoundException(userDTO.getNic() + " User doesn't exist !");
-
-        if (userRepository.existsByEmail(userDTO.getEmail()))
-            throw new DuplicateException(userDTO.getEmail() + " user email already exist !");
+            throw new NotFoundException(userUpdateDTO.getEmail() + " User doesn't exist !");
 
         User prsentUser = user.get();
-        prsentUser.setEmail(userDTO.getEmail());
-        prsentUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+
+        if (!passwordEncoder.matches(userUpdateDTO.getOldPassword(), prsentUser.getPassword()))
+            throw new RuntimeException("Old password is incorrect !");
+
+        prsentUser.setUserName(userUpdateDTO.getUserName());
+        prsentUser.setPassword(passwordEncoder.encode(userUpdateDTO.getNewPassword()));
 
         return modelMapper.map(userRepository.save(prsentUser), UserDTO.class);
     }
@@ -192,7 +194,6 @@ public class UserServiceImpl implements UserService {
     private UserDTO getDTO(User user) {
 
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
-        System.out.println(user.getRole());
 
         try {
 
@@ -250,5 +251,19 @@ public class UserServiceImpl implements UserService {
     public void validateToken(String token) {
 
         jwtService.validateToken(token);
+    }
+
+    @Override
+    public List<UserDTO> searchByText(String text) {
+
+        text = "%" + text + "%";
+
+        return userRepository
+                .searchByText(text, text, text, text)
+                .stream()
+                .filter(user -> user.getRole().equals(Role.USER))
+                .map(this::getDTO)
+                .toList();
+
     }
 }

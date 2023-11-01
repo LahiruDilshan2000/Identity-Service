@@ -3,6 +3,7 @@ package lk.ijse.identityserver.service;
 import lk.ijse.identityserver.dto.AuthRequestDTO;
 import lk.ijse.identityserver.dto.AuthorizedRespondsDTO;
 import lk.ijse.identityserver.dto.UserDTO;
+import lk.ijse.identityserver.dto.UserUpdateDTO;
 import lk.ijse.identityserver.entity.User;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +21,7 @@ public interface UserService {
 
     UserDTO updateUser(UserDTO userDTO, MultipartFile file) throws IOException;
 
-    UserDTO updateUserUserNameAndPassword(UserDTO userDTO);
+    UserDTO updateUserUserNameAndPassword(UserUpdateDTO userUpdateDTO);
 
     void deleteUser(Integer userId);
 
@@ -33,4 +34,6 @@ public interface UserService {
     AuthorizedRespondsDTO generateToken(AuthRequestDTO authRequestDTO) throws IOException;
 
     void validateToken(String token);
+
+    List<UserDTO> searchByText(String text);
 }
