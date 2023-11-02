@@ -3,8 +3,6 @@ package lk.ijse.identityserver.api;
 import jakarta.validation.Valid;
 import lk.ijse.identityserver.dto.UserDTO;
 import lk.ijse.identityserver.dto.UserUpdateDTO;
-import lk.ijse.identityserver.entity.Role;
-import lk.ijse.identityserver.exception.UnauthorizedException;
 import lk.ijse.identityserver.service.UserService;
 import lk.ijse.identityserver.util.ResponseUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,11 +29,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseUtil updateUser(@RequestPart("file") MultipartFile file,
-                                   @Valid @RequestPart("user") UserDTO userDTO,
-                                   @RequestHeader("X-ROLE") Role role) throws IOException {
-
-        if (!role.equals(Role.ADMIN_USER))
-            throw new UnauthorizedException("Un authorized access to application");
+                                   @Valid @RequestPart("user") UserDTO userDTO) throws IOException {
 
         return ResponseUtil
                 .builder()
@@ -47,13 +41,8 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseUtil UpdateUsernameAndPassword(@Valid @RequestBody UserUpdateDTO userUpdateDTO,
-                                                  @RequestHeader("X-ROLE") Role role){
+    public ResponseUtil UpdateUsernameAndPassword(@Valid @RequestBody UserUpdateDTO userUpdateDTO){
 
-        if (!role.equals(Role.USER))
-            throw new UnauthorizedException("Un authorized access to application");
-
-        System.out.println(userUpdateDTO.toString());
         return ResponseUtil
                 .builder()
                 .code(200)
@@ -63,10 +52,7 @@ public class UserController {
     }
 
     @DeleteMapping(params = {"userId"}, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseUtil deleteUser(@RequestParam Integer userId, @RequestHeader("X-ROLE") Role role) {
-
-        if (!role.equals(Role.ADMIN_USER))
-            throw new UnauthorizedException("Un authorized access to application");
+    public ResponseUtil deleteUser(@RequestParam Integer userId) {
 
         userService.deleteUser(userId);
         return ResponseUtil
@@ -89,11 +75,7 @@ public class UserController {
 
     @GetMapping(value = "/getAll", params = {"page", "count"}, produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseUtil getUserPageable(@RequestParam Integer page,
-                                        @RequestParam Integer count,
-                                        @RequestHeader("X-ROLE") Role role) {
-
-        if (!role.equals(Role.ADMIN_USER))
-            throw new UnauthorizedException("Un authorized access to application");
+                                        @RequestParam Integer count) {
 
         return ResponseUtil
                 .builder()
@@ -115,10 +97,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/search", params = {"text"}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseUtil searchByText(@RequestParam String text, @RequestHeader("X-ROLE") Role role) {
-
-        if(!role.equals(Role.ADMIN_USER))
-            throw new UnauthorizedException("Un authorized access to application");
+    public ResponseUtil searchByText(@RequestParam String text) {
 
         return ResponseUtil
                 .builder()

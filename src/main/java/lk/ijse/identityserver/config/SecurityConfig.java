@@ -1,6 +1,7 @@
 package lk.ijse.identityserver.config;
 
 import lk.ijse.identityserver.exception.NotFoundException;
+import lk.ijse.identityserver.filter.JwtFilter;
 import lk.ijse.identityserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -13,11 +14,12 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * @author Lahiru Dilshan
@@ -31,6 +33,8 @@ public class SecurityConfig {
 
     private final UserRepository userRepository;
 
+    private final JwtFilter jwtFilter;
+
     @Bean
     public UserDetailsService userDetailsService(){
         return username -> userRepository.findByEmail(username)
@@ -43,18 +47,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("api/v1/auth/register",
-                                    "/api/v1/auth/token",
-                                    "/api/v1/auth/validate",
-                                    "/api/v1/auth/user/**")
+                                    "api/v1/auth/token",
+                                    "api/v1/auth/user/update")
                             .permitAll()
                             .anyRequest()
                             .authenticated();
                 })
-                /*.sessionManagement(session -> {
+                .sessionManagement(session -> {
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)*/
+                /*.authenticationProvider(authenticationProvider)*/
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
